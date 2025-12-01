@@ -1,0 +1,120 @@
+#include <stdio.h>
+
+#define MAX 30
+
+// Function to check if page is present in frames
+int isPresent(int frames[], int f, int page) {
+    for(int i = 0; i < f; i++)
+        if(frames[i] == page)
+            return 1;
+    return 0;
+}
+
+// FIFO Page Replacement
+int FIFO(int pages[], int n, int f) {
+    int frames[f];
+    int index = 0, pageFaults = 0;
+
+    for(int i = 0; i < f; i++)
+        frames[i] = -1;
+
+    for(int i = 0; i < n; i++) {
+        if(!isPresent(frames, f, pages[i])) {
+            frames[index] = pages[i];
+            index = (index + 1) % f;
+            pageFaults++;
+        }
+    }
+    return pageFaults;
+}
+
+// LRU Page Replacement
+int LRU(int pages[], int n, int f) {
+    int frames[f], recent[f];
+    int pageFaults = 0;
+
+    for(int i = 0; i < f; i++) {
+        frames[i] = -1;
+        recent[i] = -1;
+    }
+
+    for(int i = 0; i < n; i++) {
+        if(isPresent(frames, f, pages[i])) {
+            // Update recent use
+            for(int j = 0; j < f; j++)
+                if(frames[j] == pages[i])
+                    recent[j] = i;
+        } else {
+            int pos = 0;
+            for(int j = 1; j < f; j++)
+                if(recent[j] < recent[pos])
+                    pos = j;
+
+            frames[pos] = pages[i];
+            recent[pos] = i;
+            pageFaults++;
+        }
+    }
+    return pageFaults;
+}
+
+// OPTIMAL Page Replacement
+int OPTIMAL(int pages[], int n, int f) {
+    int frames[f];
+    int pageFaults = 0;
+
+    for(int i = 0; i < f; i++)
+        frames[i] = -1;
+
+    for(int i = 0; i < n; i++) {
+        if(!isPresent(frames, f, pages[i])) {
+            int pos = -1, farthest = i;
+
+            for(int j = 0; j < f; j++) {
+                int k;
+                for(k = i + 1; k < n; k++)
+                    if(frames[j] == pages[k])
+                        break;
+
+                if(k == n) {
+                    pos = j;
+                    break;
+                }
+
+                if(k > farthest) {
+                    farthest = k;
+                    pos = j;
+                }
+            }
+
+            if(pos == -1)
+                pos = 0;
+
+            frames[pos] = pages[i];
+            pageFaults++;
+        }
+    }
+    return pageFaults;
+}
+
+int main() {
+    int n, f;
+    int pages[MAX];
+
+    printf("Enter number of pages in reference string: ");
+    scanf("%d", &n);
+
+    printf("Enter reference string: ");
+    for(int i = 0; i < n; i++)
+        scanf("%d", &pages[i]);
+
+    printf("Enter number of frames: ");
+    scanf("%d", &f);
+
+    printf("\nPage Faults Count:\n");
+    printf("FIFO: %d\n", FIFO(pages, n, f));
+    printf("LRU : %d\n", LRU(pages, n, f));
+    printf("OPT : %d\n", OPTIMAL(pages, n, f));
+
+    return 0;
+}
